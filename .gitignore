@@ -16,3 +16,7 @@ dist/
 
 # .txt files
 *.txt
+
+# .env
+*.env
+*.env.prod
