@@ -13,3 +13,6 @@ dist/
 # File di build generati da IDEs
 .vscode/
 .idea/
+
+# .txt files
+*.txt
