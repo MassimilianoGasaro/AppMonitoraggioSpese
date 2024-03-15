@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
+import session from "express-session";
 import http from "http";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -8,20 +9,30 @@ import compression from "compression";
 import mongoose from "mongoose";
 import { Logger } from "winston";
 import logger from "./logger/logger";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
 const app = express();
 
+// CORS
 app.use(cors({
     credentials: true,
 }));
-app.use(compression());
-app.use(cookieParser());
+// AUTH
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(
+  session({
+    secret: 'secret', // Chiave segreta per firmare i cookie
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // routes
-// TODO
+app.use('/auth', authRoutes);
 
 const PORT = process.env.PORT;
 const uri: string | undefined = process.env.CONNECTION_STRING;
