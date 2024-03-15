@@ -1,14 +1,14 @@
 import mongoose, { Schema } from "mongoose";
 
 interface IUser {
-  username?: string;
+  username: string;
   email: string;
-  dateOfSubscribe?: string;
+  dateOfSubscribe: string;
   password: string;
 }
 
 const UserSchema = new Schema<IUser>({
-  username: { type: String, required: false },
+  username: { type: String, required: true },
   email: { type: String, required: true },
   password: { type: String, required: true },
   dateOfSubscribe: { type: String }

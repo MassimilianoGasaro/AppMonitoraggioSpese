@@ -20,14 +20,13 @@ export const callback = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'L\'utente esiste già' });
         }
-        const newUser = new User({ email, password });
+        const newUser = new User({ email, password, username });
         await newUser.save();
         res.status(201).json({ message: 'Utente registrato con successo' });
     } catch (error) {
