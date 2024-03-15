@@ -2,17 +2,21 @@ import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
 interface UserDocument extends Document {
-    username: string;
-    password: string;
-    email: string;
-    dateOfSubscribe?: string;
+  name: string;
+  surname: string;
+  password: string;
+  email: string;
+  dateOfSubscribe?: string;
+  _sessionToken?: string;
 }
 
-const UserSchema = new Schema<UserDocument>({
-    username: { type: String, require: true },
-    password: { type: String, require: true },
-    email: { type: String, require: true },
-    dateOfSubscribe: { type: String, require: false },
+export const UserSchema = new Schema<UserDocument>({
+  name: { type: String, require: true },
+  surname: { type: String, require: true },
+  password: { type: String, require: true },
+  email: { type: String, require: true },
+  dateOfSubscribe: { type: String, require: false },
+  _sessionToken: { type: String, require: false }
 });
 
 // Middleware per hashare la password prima di salvarla nel database
@@ -26,9 +30,17 @@ UserSchema.pre<UserDocument>('save', function (next) {
     next();
   });
   
-  // Metodo per verificare la password
-  UserSchema.methods.comparePassword = function (password: string): boolean {
-    return bcrypt.compareSync(password, this.password);
-  };
+// Metodo per verificare la password
+UserSchema.methods.comparePassword = function (password: string): boolean {
+  let res: boolean = false;
+  bcrypt.compare(password, this.password, (err, result) => {
+    if (result) res = true;
+  });
+  return res;
+};
+
+export const getUserBySessionToken = (sessionToken: string) => User.findOne({
+  _sessionToken: sessionToken
+}); 
 
 export const User = mongoose.model<UserDocument>("User", UserSchema);

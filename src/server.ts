@@ -19,13 +19,16 @@ const app = express();
 app.use(cors({
     credentials: true,
 }));
-// AUTH
+
+// Body
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+// Auth e Cookie
 app.use(cookieParser());
 app.use(
   session({
-    secret: 'secret', // Chiave segreta per firmare i cookie
+    secret: process.env.SESSION_SECRET ?? "secret", // Chiave segreta per firmare i cookie
     resave: false,
     saveUninitialized: false,
   })
