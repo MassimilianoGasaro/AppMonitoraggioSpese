@@ -3,7 +3,7 @@ import { getUserBySessionToken } from '../models/user';
 import { get, merge } from 'lodash';
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-    console.log(req);
+  const sessionId = req.get("set-cookie")
   if (req.session) {
     next();
   } else {

@@ -41,3 +41,8 @@ export const logout = (req: Request, res: Response) => {
     res.status(200).json({ message: 'Logout riuscito' });
   });
 };
+
+export const test = (req: Request, res: Response) => {
+  console.log(req);
+  res.status(200).json({ message: "test riuscito" });
+};
