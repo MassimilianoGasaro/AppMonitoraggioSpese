@@ -11,7 +11,7 @@ dist/
 *.config.js
 
 # File di build generati da IDEs
-.vscode/
+# .vscode/
 .idea/
 
 # .txt files

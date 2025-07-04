@@ -9,44 +9,34 @@ import compression from "compression";
 import mongoose from "mongoose";
 import { Logger } from "winston";
 import logger from "./logger/logger";
-import passport from "passport";
-import { callback, login, register } from "./controllers/auth";
-import { isAuthenticated } from "./middlewares/auth";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
 const app = express();
 
+// CORS
 app.use(cors({
     credentials: true,
 }));
-app.use(bodyParser.json()); // gestisci il body come json
 
-const secret_ses: string | undefined = process.env.SESSION_SECRET?.toString();
-// Configura la sessione
-app.use(session({
-    secret: secret_ses ?? "",
-    resave: true,
-    saveUninitialized: true
-}));
+// Body
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// Inizializza Passport.js
-app.use(passport.initialize());
-app.use(passport.session());
+// Auth e Cookie
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET ?? "secret", // Chiave segreta per firmare i cookie
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
-// Rotte
-app.get('/', (req, res) => {
-    res.send('Benvenuto!');
-});
-
-app.post('/register', register);
-app.get('/login', login);
-app.get('/callback', callback);
-
-// Rotta protetta
-app.get('/dashboard', isAuthenticated, (req, res) => {
-    res.send('Dashboard protetta');
-});
+// routes
+app.use('/auth', authRoutes);
+// app.use("/dashboard", authRoutes);
 
 const PORT = process.env.PORT;
 const uri: string | undefined = process.env.CONNECTION_STRING;
