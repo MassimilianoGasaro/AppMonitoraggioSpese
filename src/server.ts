@@ -1,8 +1,4 @@
 import dotenv from "dotenv";
-
-// Carica le variabili d'ambiente PRIMA di tutto
-dotenv.config();
-
 import express from "express";
 import session from "express-session";
 import http from "http";
@@ -14,9 +10,10 @@ import mongoose from "mongoose";
 import { Logger } from "winston";
 import logger from "./logger/logger";
 import passport from "passport";
-import "./config/passport"; // Importa la configurazione di Passport
-import { callback, login, register } from "./controllers/authController";
+import { callback, login, register } from "./controllers/auth";
 import { isAuthenticated } from "./middlewares/auth";
+
+dotenv.config();
 
 const app = express();
 
@@ -39,7 +36,7 @@ app.use(passport.session());
 
 // Rotte
 app.get('/', (req, res) => {
-    res.json({ message: 'Benvenuto nell\'API di MoneyManagerApp!' });
+    res.send('Benvenuto!');
 });
 
 app.post('/register', register);
