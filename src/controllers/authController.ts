@@ -23,7 +23,7 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const user = await User.findOne({ email: email});
-  if (!user || !bcrypt.compare(password, user.password)) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).json({ message: 'Credenziali non valide' });
   }
 

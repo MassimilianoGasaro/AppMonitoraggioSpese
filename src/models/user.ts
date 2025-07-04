@@ -1,7 +1,8 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 import bcrypt from "bcryptjs";
 
 interface UserDocument extends Document {
+  _id: Types.ObjectId;
   name: string;
   surname: string;
   password: string;

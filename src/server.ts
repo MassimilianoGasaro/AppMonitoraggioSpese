@@ -36,7 +36,7 @@ app.use(
 
 // routes
 app.use('/auth', authRoutes);
-app.use("/dashboard", authRoutes);
+// app.use("/dashboard", authRoutes);
 
 const PORT = process.env.PORT;
 const uri: string | undefined = process.env.CONNECTION_STRING;
