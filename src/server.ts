@@ -45,11 +45,14 @@ const server = http.createServer(app);
 if (uri) {
     mongoose.connect(uri)
     .then(() => { /** ready to use. The `mongoose.connect()` promise resolves to mongoose instance. */
-            logger.info("connection is opened!");
-            server.listen(PORT, () => {
-                logger.info(`Server is running at http://localhost:${PORT}/`);
-            });
-        }, err => { /** handle initial connection error */ 
-            logger.error(`${err}`);
-        });
+      logger.info("connection is opened!");
+      server.listen(PORT, () => {
+        logger.info(`Server is running at http://localhost:${PORT}/`);
+      });
+      }, err => { /** handle initial connection error */ 
+        logger.error(`${err}`);
+      })
+    .catch(err => {
+      logger.error(`Error connecting to MongoDB: ${err}`)
+    });
 }
