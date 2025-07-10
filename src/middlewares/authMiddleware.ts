@@ -93,7 +93,7 @@ export const isAuthenticated = verifyToken;
  */
 export const isOwner = async (req: Request, res: Response, next: NextFunction) => {
   try {
-      const { user_id } = req.body;
+      const { user_id } = req.query;
       const currentUserId = req.user?.id;
 
       if (!currentUserId) {

@@ -2,18 +2,19 @@ import { Request, Response } from 'express';
 import { Activity } from "../models/activity";
 import { ApiResponse } from "../helpers/ApiResponse";
 
-export const getAllAsync = async (req: Request, res: Response) => {
+export const getByIdAsync = async (req: Request, res: Response) => {
     try {
-        const activities = await Activity.find({});
-        
-        if (activities.length === 0) {
-            return res.status(200).json(
-                ApiResponse.success('Nessuna attività trovata', [])
+        const { id } = req.params;
+        const activity = await Activity.findById(id);
+
+        if (!activity) {
+            return res.status(404).json(
+                ApiResponse.notFound('Attività non trovata')
             );
         }
 
         return res.status(200).json(
-            ApiResponse.success('Attività recuperate con successo', activities)
+            ApiResponse.success('Attività trovata', activity)
         );
     } catch (error: any) {
         return res.status(500).json(
