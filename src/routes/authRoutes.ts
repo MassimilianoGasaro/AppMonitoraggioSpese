@@ -1,6 +1,6 @@
 import express from 'express';
-import { register, login, logout, test, verifyToken, getMe } from '../controllers/authController';
-import { requireAuth } from '../middlewares/authMiddleware';
+import { register, login, logout, test } from '../controllers/authController';
+import { isAuthenticated, getMe } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -8,9 +8,9 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 
-// Rotte protette
-router.post('/logout', verifyToken, logout);
-router.get('/me', verifyToken, getMe);
-router.get('/test', requireAuth, test);
+// Rotte protette - richiedono JWT token
+router.post('/logout', isAuthenticated, logout);
+router.get('/me', isAuthenticated, getMe);
+router.get('/test', isAuthenticated, test);
 
 export default router;

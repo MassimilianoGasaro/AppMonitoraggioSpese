@@ -1,12 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { getUserBySessionToken } from '../models/user';
-import { get, merge } from 'lodash';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/user';
+import { ApiResponse } from '../helpers/ApiResponse';
+import { get } from 'lodash';
 
 // Estendi i tipi di Express per includere proprietà personalizzate
 declare global {
   namespace Express {
     interface Request {
-      identity?: any;
+      user?: {
+        id: string;
+        email: string;
+        name: string;
+        surname: string;
+      };
+      identity?: any; // Manteniamo per compatibilità
     }
     interface Session {
       userId?: string;
@@ -14,104 +22,129 @@ declare global {
   }
 }
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  console.log(req.session);
-  // Controlla se esiste una sessione attiva
-  if (req.session && (req.session as any).userId) {
-    next();
-  } else {
-    res.status(401).json({ 
-      success: false,
-      message: 'Non autorizzato - sessione richiesta' 
-    });
-  }
-};
-
-export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Middleware JWT per autenticazione
+ * Verifica il token JWT nell'header Authorization: Bearer <token>
+ */
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
-      const sessionToken = req.cookies["connect.sid"];
-      if (!sessionToken) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Token di sessione mancante' 
-        });
-      }
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-      const existingUser = await getUserBySessionToken(sessionToken);
-      if (!existingUser) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Sessione non valida' 
-        });
-      }
+    if (!token) {
+      return res.status(401).json(
+        ApiResponse.unauthorized('Token di accesso richiesto')
+      );
+    }
 
-      merge(req, { identity: existingUser });
-      return next();
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json(
+        ApiResponse.internalError('Errore di configurazione server')
+      );
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as any;
+    
+    // Verifica che l'utente esista ancora
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json(
+        ApiResponse.unauthorized('Utente non trovato')
+      );
+    }
+
+    // Aggiungi i dati dell'utente alla richiesta per i middleware successivi
+    req.user = {
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      surname: user.surname
+    };
+
+    // Manteniamo compatibilità con il vecchio sistema
+    req.identity = user;
+
+    next();
   } catch (error) {
-      console.log('Errore in isAuthenticated:', error);
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Errore durante la verifica dell\'autenticazione' 
-      });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json(
+        ApiResponse.unauthorized('Token scaduto')
+      );
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json(
+        ApiResponse.unauthorized('Token non valido')
+      );
+    }
+    return res.status(500).json(
+      ApiResponse.internalError('Errore durante la verifica del token')
+    );
   }
 };
 
+/**
+ * Alias per verifyToken per compatibilità
+ */
+export const isAuthenticated = verifyToken;
+
+/**
+ * Middleware per verificare la proprietà delle risorse
+ * L'utente può accedere solo ai propri dati
+ */
 export const isOwner = async (req: Request, res: Response, next: NextFunction) => {
   try {
       const { id } = req.params;
-      const currentUserId = get(req, "identity._id") as unknown as string;
+      const currentUserId = req.user?.id;
 
       if (!currentUserId) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Utente non identificato' 
-        });
+        return res.status(403).json(
+          ApiResponse.forbidden('Utente non identificato')
+        );
       }
 
       if (currentUserId.toString() !== id) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Accesso negato - puoi accedere solo ai tuoi dati' 
-        });
+        return res.status(403).json(
+          ApiResponse.forbidden('Accesso negato - puoi accedere solo ai tuoi dati')
+        );
       }
 
       next();
   } catch (error) {
       console.log('Errore in isOwner:', error);
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Errore durante la verifica dei permessi' 
-      });
+      return res.status(400).json(
+        ApiResponse.internalError('Errore durante la verifica dei permessi')
+      );
   }
 };
 
+/**
+ * Middleware per verificare i ruoli degli utenti
+ */
 export const hasRole = (requiredRole: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = get(req, "identity");
+      const user = req.user || req.identity;
       
       if (!user) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Utente non autenticato' 
-        });
+        return res.status(403).json(
+          ApiResponse.forbidden('Utente non autenticato')
+        );
       }
 
       // Se il modello User ha un campo 'role', controllalo
       if (user.role !== requiredRole) {
-        return res.status(403).json({ 
-          success: false, 
-          message: `Accesso negato - ruolo '${requiredRole}' richiesto` 
-        });
+        return res.status(403).json(
+          ApiResponse.forbidden(`Accesso negato - ruolo '${requiredRole}' richiesto`)
+        );
       }
 
       next();
     } catch (error) {
       console.log('Errore in hasRole:', error);
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Errore durante la verifica del ruolo' 
-      });
+      return res.status(400).json(
+        ApiResponse.internalError('Errore durante la verifica del ruolo')
+      );
     }
   };
 };
@@ -121,4 +154,21 @@ export const isAdmin = hasRole('admin');
 
 // Middleware combinato: autentica E verifica la proprietà
 export const authenticateAndOwn = [isAuthenticated, isOwner];
+
+/**
+ * Middleware per ottenere le informazioni dell'utente dal token (endpoint protetto)
+ */
+export const getMe = (req: Request, res: Response) => {
+  const user = req.user;
+  
+  if (!user) {
+    return res.status(401).json(
+      ApiResponse.unauthorized('Utente non autenticato')
+    );
+  }
+
+  return res.status(200).json(
+    ApiResponse.success('Informazioni utente recuperate', user)
+  );
+};
 

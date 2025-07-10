@@ -40,8 +40,6 @@ UserSchema.methods.comparePassword = function (password: string): boolean {
   return res;
 };
 
-export const getUserBySessionToken = (sessionToken: string) => User.findOne({
-  _sessionToken: sessionToken
-}); 
+export const getUserBySessionToken = async (sessionToken: string) => await User.findOne({ _sessionToken: sessionToken }); 
 
 export const User = mongoose.model<UserDocument>("User", UserSchema);
