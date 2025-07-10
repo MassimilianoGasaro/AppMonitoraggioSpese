@@ -6,7 +6,7 @@ import {
   updateAsync, 
   deleteAsync 
 } from '../controllers/activitiesController';
-import { isAuthenticated } from '../middlewares/authMiddleware';
+import { isAuthenticated, authenticateAndOwn } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -17,10 +17,10 @@ const router = express.Router();
 router.get('/', isAuthenticated, getAllAsync);
 
 // GET /api/activities/user - Ottieni le attività dell'utente autenticato
-router.get('/user', isAuthenticated, getByUserIdAsync);
+router.get('/user', authenticateAndOwn, getByUserIdAsync);
 
 // POST /api/activities - Crea nuova attività
-router.post('/', isAuthenticated, createAsync);
+router.post('/', authenticateAndOwn, createAsync);
 
 // PUT /api/activities/:id - Aggiorna attività
 router.put('/:id', isAuthenticated, updateAsync);

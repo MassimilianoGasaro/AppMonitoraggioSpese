@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
 import { ApiResponse } from '../helpers/ApiResponse';
-import { get } from 'lodash';
 
 // Estendi i tipi di Express per includere proprietà personalizzate
 declare global {
@@ -94,7 +93,7 @@ export const isAuthenticated = verifyToken;
  */
 export const isOwner = async (req: Request, res: Response, next: NextFunction) => {
   try {
-      const { id } = req.params;
+      const { user_id } = req.body;
       const currentUserId = req.user?.id;
 
       if (!currentUserId) {
@@ -103,7 +102,7 @@ export const isOwner = async (req: Request, res: Response, next: NextFunction) =
         );
       }
 
-      if (currentUserId.toString() !== id) {
+      if (currentUserId.toString() !== user_id) {
         return res.status(403).json(
           ApiResponse.forbidden('Accesso negato - puoi accedere solo ai tuoi dati')
         );
@@ -155,20 +154,4 @@ export const isAdmin = hasRole('admin');
 // Middleware combinato: autentica E verifica la proprietà
 export const authenticateAndOwn = [isAuthenticated, isOwner];
 
-/**
- * Middleware per ottenere le informazioni dell'utente dal token (endpoint protetto)
- */
-export const getMe = (req: Request, res: Response) => {
-  const user = req.user;
-  
-  if (!user) {
-    return res.status(401).json(
-      ApiResponse.unauthorized('Utente non autenticato')
-    );
-  }
-
-  return res.status(200).json(
-    ApiResponse.success('Informazioni utente recuperate', user)
-  );
-};
 
