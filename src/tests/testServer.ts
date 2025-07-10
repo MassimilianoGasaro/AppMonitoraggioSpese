@@ -15,6 +15,7 @@ import logger from "../logger/logger";
 import { register, login, logout } from "../controllers/authController";
 import { isAuthenticated } from "../middlewares/authMiddleware";
 import { setupTestDB } from "./setup/testDB";
+import authRoutes from "../routes/authRoutes";
 
 const createTestServer = async () => {
   // Setup del database di test
@@ -46,35 +47,14 @@ const createTestServer = async () => {
     });
   });
 
-  // Rotta protetta
-//   app.get('/dashboard', isAuthenticated, (req, res) => {
-//     res.json({ 
-//       message: 'Dashboard protetta',
-//       user: req.identity
-//     });
-//   });
+  // routes
+  app.use('/auth', authRoutes);
 
   // Rotte aggiuntive per il test
   app.get('/test/users', async (req, res) => {
     const { User } = await import('../models/user');
     const users = await User.find({}).select('-password');
     res.json({ users, count: users.length });
-  });
-
-  app.delete('/test/users', async (req, res) => {
-    const { User } = await import('../models/user');
-    await User.deleteMany({});
-    res.json({ message: 'Tutti gli utenti eliminati' });
-  });
-
-  // Nuove rotte di debug
-  app.get('/test/users/:email', async (req, res) => {
-    const { User } = await import('../models/user');
-    const user = await User.findOne({ email: req.params.email }).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'Utente non trovato' });
-    }
-    res.json({ user });
   });
 
   app.get('/test/activities', async (req, res) => {
@@ -106,30 +86,6 @@ const createTestServer = async () => {
         balance: totalIncome - totalExpenses
       }
     });
-  });
-
-  app.get('/test/db-info', async (req, res) => {
-    try {
-      const db = mongoose.connection.db;
-      if (!db) {
-        return res.status(500).json({ error: 'Database non connesso' });
-      }
-      
-      const collections = await db.listCollections().toArray();
-      const dbStats = await db.stats();
-      
-      res.json({
-        database: mongoose.connection.name,
-        collections: collections.map(c => c.name),
-        stats: {
-          collections: dbStats.collections,
-          objects: dbStats.objects,
-          dataSize: dbStats.dataSize + ' bytes'
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ error: 'Errore nel recupero info database' });
-    }
   });
 
   app.post('/test/seed-data', async (req, res) => {

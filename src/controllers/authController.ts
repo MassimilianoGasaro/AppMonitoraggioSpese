@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
 import moment from 'moment';
 
@@ -27,9 +28,40 @@ export const login = async (req: Request, res: Response) => {
     return res.status(401).json({ message: 'Credenziali non valide' });
   }
 
-  const salt = bcrypt.genSaltSync(10);
-  const hashedCookie = bcrypt.hashSync(user._id.toString(), salt);
-  res.cookie('connect.sid', hashedCookie).status(200).json({ message: 'Login riuscito' });
+  // Genera JWT token
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    return res.status(500).json({ message: 'Errore di configurazione server' });
+  }
+
+  const token = jwt.sign(
+    { 
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+      surname: user.surname
+    },
+    jwtSecret,
+    { 
+      expiresIn: '24h' // Token valido per 24 ore
+    }
+  );
+
+  // Salva il token nell'utente per il logout
+  user._sessionToken = token;
+  await user.save();
+
+  res.status(200).json({ 
+    message: 'Login riuscito',
+    token,
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      surname: user.surname
+    },
+    expiresIn: '24h'
+  });
 };
 
 export const logout = (req: Request, res: Response) => {
@@ -40,6 +72,55 @@ export const logout = (req: Request, res: Response) => {
     res.clearCookie('connect.sid');
     res.status(200).json({ message: 'Logout riuscito' });
   });
+};
+
+// Middleware per verificare il JWT token
+export const verifyToken = async (req: Request, res: Response, next: any) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ message: 'Token di accesso richiesto' });
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json({ message: 'Errore di configurazione server' });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as any;
+    
+    // Verifica che l'utente esista ancora
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: 'Utente non trovato' });
+    }
+
+    // Aggiungi i dati dell'utente alla richiesta
+    (req as any).user = {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      surname: user.surname
+    };
+
+    next();
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token scaduto' });
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Token non valido' });
+    }
+    return res.status(500).json({ message: 'Errore durante la verifica del token' });
+  }
+};
+
+// Funzione per ottenere le informazioni dell'utente dal token
+export const getMe = (req: Request, res: Response) => {
+  const user = (req as any).user;
+  res.json({ user });
 };
 
 export const test = (req: Request, res: Response) => {
