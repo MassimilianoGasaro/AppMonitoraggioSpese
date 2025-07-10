@@ -11,9 +11,6 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import mongoose from "mongoose";
-import logger from "../logger/logger";
-import { register, login, logout } from "../controllers/authController";
-import { isAuthenticated } from "../middlewares/authMiddleware";
 import { setupTestDB } from "./setup/testDB";
 import authRoutes from "../routes/authRoutes";
 
@@ -65,7 +62,7 @@ const createTestServer = async () => {
 
   app.get('/test/activities/user/:email', async (req, res) => {
     const { User } = await import('../models/user');
-    const { Activity } = await import('../models/activity');
+    const { Activity, getUserActivityStats } = await import('../models/activity');
     
     const user = await User.findOne({ email: req.params.email });
     if (!user) {
@@ -73,18 +70,12 @@ const createTestServer = async () => {
     }
     
     const activities = await Activity.find({ user_id: user._id });
-    const totalIncome = activities.filter(a => a.type === 'entrata').reduce((sum, a) => sum + a.amount, 0);
-    const totalExpenses = activities.filter(a => a.type !== 'entrata').reduce((sum, a) => sum + a.amount, 0);
+    const stats = await getUserActivityStats(user._id.toString());
     
     res.json({ 
       user: { name: user.name, surname: user.surname, email: user.email },
       activities,
-      stats: {
-        total: activities.length,
-        totalIncome,
-        totalExpenses,
-        balance: totalIncome - totalExpenses
-      }
+      stats
     });
   });
 
@@ -262,6 +253,56 @@ const createTestServer = async () => {
         }
       }
     });
+  });
+
+  // Nuova rotta per testare la validazione delle relazioni
+  app.post('/test/activity-with-validation', async (req, res) => {
+    try {
+      const { Activity } = await import('../models/activity');
+      const { name, amount, description, date, type, userEmail } = req.body;
+      
+      // Trova l'utente per email
+      const { User } = await import('../models/user');
+      const user = await User.findOne({ email: userEmail });
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Utente non trovato' });
+      }
+      
+      // Crea l'attività - la validazione middleware controllerà che l'utente esista
+      const activity = new Activity({
+        name,
+        amount,
+        description,
+        date,
+        type,
+        user_id: user._id
+      });
+      
+      await activity.save();
+      
+      res.status(201).json({ 
+        message: 'Attività creata con successo',
+        activity: {
+          id: activity._id,
+          name: activity.name,
+          amount: activity.amount,
+          description: activity.description,
+          date: activity.date,
+          type: activity.type,
+          user: {
+            id: user._id,
+            email: user.email,
+            name: user.name
+          }
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({ 
+        message: 'Errore nella creazione dell\'attività',
+        error: error.message 
+      });
+    }
   });
 
   // Middleware per gestire errori
