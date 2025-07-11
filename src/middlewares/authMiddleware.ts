@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
-import { ApiResponse } from '../helpers/ApiResponse';
+import { ApiResponse } from '../helpers/apiResponse';
 
 // Estendi i tipi di Express per includere proprietà personalizzate
 declare global {

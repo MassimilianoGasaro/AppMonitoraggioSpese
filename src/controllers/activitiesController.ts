@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Activity } from "../models/activity";
-import { ApiResponse } from "../helpers/ApiResponse";
+import { ApiResponse } from "../helpers/apiResponse";
 
 export const getByIdAsync = async (req: Request, res: Response) => {
     try {

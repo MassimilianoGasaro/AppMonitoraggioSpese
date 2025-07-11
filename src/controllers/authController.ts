@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
 import moment from 'moment';
-import { ApiResponse } from '../helpers/ApiResponse';
+import { ApiResponse } from '../helpers/apiResponse';
 
 export const register = async (req: Request, res: Response) => {
   const { name, surname, password, email } = req.body;
