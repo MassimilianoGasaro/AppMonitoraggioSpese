@@ -7,8 +7,6 @@
     "node": "18.x"
   },
   "scripts": {
-    "preinstall": "npm cache clean --force",
-    "prebuild": "npm install",
     "build": "tsc",
     "build:prod": "npm ci --only=production && tsc",
     "start": "node dist/server.js",
