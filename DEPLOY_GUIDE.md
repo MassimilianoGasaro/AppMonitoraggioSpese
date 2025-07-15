@@ -60,11 +60,11 @@ git push origin main
 ### Passo 3: Configurazione
 **Settings Base:**
 - **Name**: `moneymanager-api` (o il nome che preferisci)
-- **Region**: Europe (West) - per l'Italia
+- **Region**: Europe (Frankfurt) - per l'Italia
 - **Branch**: `main`
 - **Root Directory**: lascia vuoto
 - **Runtime**: Node
-- **Build Command**: `npm run build`
+- **Build Command**: `npm ci && npm run build`
 - **Start Command**: `npm start`
 
 **Environment Variables:**

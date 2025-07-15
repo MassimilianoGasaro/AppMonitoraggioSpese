@@ -6,6 +6,7 @@ dist/
 
 # File di log
 *.log
+logs/
 
 # File di configurazione
 *.config.js
@@ -17,6 +18,23 @@ dist/
 # .txt files
 *.txt
 
-# .env
+# .env files
 *.env
-*.env.prod
+*.env.local
+*.env.production
+*.env.staging
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo

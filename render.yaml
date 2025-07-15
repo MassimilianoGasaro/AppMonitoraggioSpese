@@ -2,7 +2,9 @@ services:
   - type: web
     name: moneymanager-api
     env: node
-    buildCommand: npm run build
+    region: frankfurt  # Più vicino all'Italia
+    plan: free
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /
     envVars:
@@ -10,5 +12,7 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=1024
     # Le altre variabili d'ambiente le aggiungerai manualmente nel dashboard Render
     # per maggiore sicurezza (CONNECTION_STRING, JWT_SECRET, etc.)
