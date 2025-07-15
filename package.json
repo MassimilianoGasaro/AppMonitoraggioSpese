@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "description": "web app per monitorare e gestire le spese",
   "main": "index.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "preinstall": "npm cache clean --force",
     "prebuild": "npm install",
     "build": "tsc",
     "build:prod": "npm ci && tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts"
+    "dev": "nodemon --exec ts-node src/server.ts"
   },
   "keywords": [],
   "author": "",
