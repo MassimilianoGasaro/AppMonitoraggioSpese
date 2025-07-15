@@ -1,3 +1,4 @@
+// apiResponse.ts
 export interface ApiResponseData<T = any> {
   success: boolean;
   message: string;
