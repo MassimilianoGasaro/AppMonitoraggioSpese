@@ -4,14 +4,13 @@
   "description": "web app per monitorare e gestire le spese",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:server": "ts-node src/tests/testServer.ts",
-    "start": "node dist/server.js",
+    "preinstall": "npm cache clean --force",
+    "prebuild": "npm install",
     "build": "tsc",
-    "build:prod": "tsc --project tsconfig.json",
-    "dev": "ts-node src/server.ts"
+    "build:prod": "npm ci && tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "test:server": "ts-node src/tests/testServer.ts"
   },
   "keywords": [],
   "author": "",
