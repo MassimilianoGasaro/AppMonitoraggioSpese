@@ -9,8 +9,7 @@
     "build": "tsc",
     "build:prod": "npm ci && tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "test:server": "ts-node src/tests/testServer.ts"
+    "dev": "ts-node src/server.ts"
   },
   "keywords": [],
   "author": "",
