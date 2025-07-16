@@ -16,8 +16,7 @@ app.use(compression());
 
 // CORS - Configura per production
 app.use(cors({
-    origin: config.frontendUrl || 'https://massimilianogasaro.github.io',
-    credentials: true,
+    origin: "*"//config.frontendUrl || 'https://massimilianogasaro.github.io',
 }));
 
 // Body parsing middleware
@@ -41,7 +40,7 @@ app.use('/api', apiRouter);
 
 // Aggiungi tutte le rotte al router principale
 apiRouter.use('/auth', authRoutes);
-apiRouter.use('/activities', activitiesRoutes); // Cambiato da /dashboard a /activities 
+apiRouter.use('/activities', activitiesRoutes);  
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
@@ -75,6 +74,7 @@ mongoose.connect(config.connectionString)
       logger.info(`🚀 Server in esecuzione su porta ${config.port}`);
       logger.info(`🌍 Ambiente: ${config.nodeEnv}`);
       logger.info(`🔐 Autenticazione: JWT`);
+      logger.info(`🔐 Frontend CORS: ${config.frontendUrl}`);
       logger.info(`📡 URL: ${config.isProduction ? 'https://your-app.onrender.com' : `http://localhost:${config.port}`}`);
     });
   })
