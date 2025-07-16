@@ -19,10 +19,13 @@ logs/
 *.txt
 
 # .env files
-*.env
-*.env.local
-*.env.production
-*.env.staging
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
+*.env.example
 
 # OS files
 .DS_Store
