@@ -5,7 +5,7 @@ services:
     region: frankfurt  # Più vicino all'Italia
     plan: free
     buildCommand: npm ci && npm run build
-    startCommand: npm start
+    startCommand: NODE_ENV=production npm start
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
