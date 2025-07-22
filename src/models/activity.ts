@@ -6,7 +6,7 @@ interface IActivity extends Document {
     amount: number;
     description?: string;
     date: string;
-    type: string;
+    type: Types.ObjectId;
     user_id: Types.ObjectId;
 }
 
@@ -22,7 +22,11 @@ const ActivitySchema = new Schema<IActivity>({
     amount: { type: Number, required: true },
     description: { type: String, required: false },
     date: { type: String, required: true },
-    type: { type: String, required: true },
+    type: { 
+        type: Schema.Types.ObjectId,
+        ref: 'ExpenseType',
+        required: true 
+    },
     user_id: { 
         type: Schema.Types.ObjectId, 
         ref: 'User', // Reference al modello User
@@ -99,25 +103,27 @@ export const getActivitiesWithUserDetails = (userId: string) => {
 export const getUserActivityStats = async (userId: string) => {
     const activities = await Activity.find({ user_id: userId });
     
-    const income = activities
-        .filter(a => a.type === 'entrata')
-        .reduce((sum, a) => sum + a.amount, 0);
+    // const income = activities
+    //     .filter(a => a.type === 'entrata')
+    //     .reduce((sum, a) => sum + a.amount, 0);
         
-    const expenses = activities
-        .filter(a => a.type !== 'entrata')
-        .reduce((sum, a) => sum + a.amount, 0);
+    // const expenses = activities
+    //     .filter(a => a.type !== 'entrata')
+    //     .reduce((sum, a) => sum + a.amount, 0);
     
-    const byType = activities.reduce((acc, activity) => {
-        acc[activity.type] = (acc[activity.type] || 0) + activity.amount;
-        return acc;
-    }, {} as Record<string, number>);
+    // const byType = activities.reduce((acc, activity) => {
+    //     acc[activity.type] = (acc[activity.type] || 0) + activity.amount;
+    //     return acc;
+    // }, {} as Record<string, number>);
     
-    return {
-        totalActivities: activities.length,
-        totalIncome: income,
-        totalExpenses: expenses,
-        balance: income - expenses,
-        byType
-    };
+    // return {
+    //     totalActivities: activities.length,
+    //     totalIncome: income,
+    //     totalExpenses: expenses,
+    //     balance: income - expenses,
+    //     byType
+    // };
+
+    return;
 };
 
