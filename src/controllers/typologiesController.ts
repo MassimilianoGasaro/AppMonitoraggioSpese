@@ -18,6 +18,22 @@ export const getAllExpenseTypes = async (req: Request, res: Response) => {
     }
 };
 
+// GET - Ottieni tutti i tipi di spesa attivi per tipologia
+export const getAllExpenseTypesByTypology = async (req: Request, res: Response) => {
+    try {
+        const { type } = req.query;
+        const expenseTypes = await ExpenseType.findActiveByType(type as 'income' | 'expense');
+
+        return res.status(200).json(
+            ApiResponse.success('Tipi di spesa recuperati con successo', expenseTypes)
+        );
+    } catch (error: any) {
+        return res.status(500).json(
+            ApiResponse.internalError('Errore nel recuperare i tipi di spesa', error.message)
+        );
+    }
+};
+
 // GET - Ottieni tutti i tipi (inclusi inattivi) - per admin
 export const getAllExpenseTypesAdmin = async (req: Request, res: Response) => {
     try {

@@ -34,7 +34,7 @@ export const getByUserIdAsync = async (req: Request, res: Response) => {
             );
         }
 
-        const activities = await Activity.find({ user_id: userId }).populate('user_id', 'name surname email');
+        const activities = await Activity.findByUserWithFullDetails(userId);
 
         if (!activities || activities.length === 0) {
             return res.status(200).json(

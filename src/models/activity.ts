@@ -14,6 +14,7 @@ interface IActivity extends Document {
 interface IActivityModel extends Model<IActivity> {
     findByUser(userId: string): Promise<IActivity[]>;
     findByUserWithDetails(userId: string): Promise<IActivity[]>;
+    findByUserWithFullDetails(userId: string): Promise<IActivity[]>;
     getUserStats(userId: string): Promise<any>;
 }
 
@@ -61,69 +62,61 @@ ActivitySchema.statics.findByUser = function(userId: string) {
 ActivitySchema.statics.findByUserWithDetails = function(userId: string) {
     return this.find({ user_id: userId })
         .populate('user_id', 'name surname email') // Popola i dati dell'utente
+        .populate('type', 'name description icon color') // Popola i dati del tipo di spesa
+        .sort({ date: -1 });
+};
+
+ActivitySchema.statics.findByUserWithFullDetails = function(userId: string) {
+    return this.find({ user_id: userId })
+        .populate('user_id', 'name surname email') // Popola tutti i dati dell'utente
+        .populate('type') // Popola tutti i dati del tipo di spesa
         .sort({ date: -1 });
 };
 
 ActivitySchema.statics.getUserStats = async function(userId: string) {
-    const activities = await this.find({ user_id: userId });
+    // Usa populate per ottenere i dati del tipo di spesa incluso il campo 'type'
+    const activities = await this.find({ user_id: userId })
+        .populate('type', 'name type'); // Include sia name che type
     
+    // Filtra usando la proprietà 'type' del ExpenseType invece del name
     const income = activities
-        .filter((a: any) => a.type === 'entrata')
+        .filter((a: any) => a.type?.type === 'income')
         .reduce((sum: number, a: any) => sum + a.amount, 0);
         
     const expenses = activities
-        .filter((a: any) => a.type !== 'entrata')
+        .filter((a: any) => a.type?.type === 'expense')
         .reduce((sum: number, a: any) => sum + a.amount, 0);
+    
+    // Statistiche per tipo di spesa (raggruppate per nome del tipo)
+    const byType = activities.reduce((acc: any, activity: any) => {
+        const typeName = activity.type?.name || 'Sconosciuto';
+        acc[typeName] = (acc[typeName] || 0) + activity.amount;
+        return acc;
+    }, {} as Record<string, number>);
+    
+    // Statistiche per categoria (entrata/uscita)
+    const byCategory = activities.reduce((acc: any, activity: any) => {
+        const category = activity.type?.type || 'sconosciuto';
+        acc[category] = (acc[category] || 0) + activity.amount;
+        return acc;
+    }, {} as Record<string, number>);
     
     return {
         totalActivities: activities.length,
         totalIncome: income,
         totalExpenses: expenses,
         balance: income - expenses,
-        byType: activities.reduce((acc: any, activity: any) => {
-            acc[activity.type] = (acc[activity.type] || 0) + activity.amount;
-            return acc;
-        }, {} as Record<string, number>)
+        byType, // Statistiche per nome del tipo (es: "Alimentari", "Trasporti", "Stipendio")
+        byCategory // Statistiche per categoria (es: "entrata", "uscita")
     };
 };
 
 export const Activity = mongoose.model<IActivity, IActivityModel>("Activity", ActivitySchema);
 
-// Funzioni di utilità semplificate
-export const getActivitiesByUser = (userId: string) => {
-    return Activity.find({ user_id: userId }).sort({ date: -1 });
-};
-
-export const getActivitiesWithUserDetails = (userId: string) => {
-    return Activity.find({ user_id: userId })
-        .populate('user_id', 'name surname email')
-        .sort({ date: -1 });
-};
-
-export const getUserActivityStats = async (userId: string) => {
-    const activities = await Activity.find({ user_id: userId });
-    
-    // const income = activities
-    //     .filter(a => a.type === 'entrata')
-    //     .reduce((sum, a) => sum + a.amount, 0);
-        
-    // const expenses = activities
-    //     .filter(a => a.type !== 'entrata')
-    //     .reduce((sum, a) => sum + a.amount, 0);
-    
-    // const byType = activities.reduce((acc, activity) => {
-    //     acc[activity.type] = (acc[activity.type] || 0) + activity.amount;
-    //     return acc;
-    // }, {} as Record<string, number>);
-    
-    // return {
-    //     totalActivities: activities.length,
-    //     totalIncome: income,
-    //     totalExpenses: expenses,
-    //     balance: income - expenses,
-    //     byType
-    // };
-
-    return;
-};
+// NOTA: Usa i metodi statici del modello invece delle funzioni di utilità
+// Esempi di utilizzo:
+// - Activity.findByUser(userId)
+// - Activity.findByUserWithDetails(userId) 
+// - Activity.findByUserWithFullDetails(userId)
+// - Activity.getUserStats(userId)
 
