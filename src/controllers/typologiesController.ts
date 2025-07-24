@@ -5,8 +5,7 @@ import { ApiResponse } from '../helpers/apiResponse';
 // GET - Ottieni tutti i tipi di spesa attivi
 export const getAllExpenseTypes = async (req: Request, res: Response) => {
     try {
-        const expenseTypes = await ExpenseType.find({ isActive: true })
-            .sort({ name: 1 }); // Ordina alfabeticamente
+        const expenseTypes = await ExpenseType.findActive();
 
         return res.status(200).json(
             ApiResponse.success('Tipi di spesa recuperati con successo', expenseTypes)
