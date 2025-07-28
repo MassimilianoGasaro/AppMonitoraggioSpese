@@ -34,16 +34,67 @@ export const getByUserIdAsync = async (req: Request, res: Response) => {
             );
         }
 
-        const activities = await Activity.findByUserWithFullDetails(userId);
+        // Parametri di paginazione dalla query string
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
 
-        if (!activities || activities.length === 0) {
-            return res.status(200).json(
-                ApiResponse.success('Nessuna attività trovata per l\'utente', [])
-            );
+        // Parametri di filtro opzionali
+        const { type, startDate, endDate, search } = req.query;
+
+        // Costruisci il filtro base
+        let filter: any = { user_id: userId };
+
+        // Aggiungi filtri opzionali
+        if (type) {
+            filter.type = type;
         }
 
+        if (startDate || endDate) {
+            filter.date = {};
+            if (startDate) filter.date.$gte = startDate;
+            if (endDate) filter.date.$lte = endDate;
+        }
+
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Esegui la query con paginazione
+        const [activities, totalCount] = await Promise.all([
+            Activity.find(filter)
+                .populate('user_id', 'name surname email')
+                .populate('type', 'name description icon color type')
+                .sort({ date: -1, createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            Activity.countDocuments(filter)
+        ]);
+
+        // Calcola metadati di paginazione
+        const totalPages = Math.ceil(totalCount / limit);
+        const hasNextPage = page < totalPages;
+        const hasPrevPage = page > 1;
+
+        const pagination = {
+            currentPage: page,
+            totalPages,
+            totalItems: totalCount,
+            itemsPerPage: limit,
+            hasNextPage,
+            hasPrevPage,
+            nextPage: hasNextPage ? page + 1 : null,
+            prevPage: hasPrevPage ? page - 1 : null
+        };
+
         return res.status(200).json(
-            ApiResponse.success('Attività trovate', activities)
+            ApiResponse.success('Attività trovate', {
+                activities,
+                pagination
+            })
         );
     } catch (error: any) {
         return res.status(500).json(
@@ -173,6 +224,51 @@ export const deleteAsync = async (req: Request, res: Response) => {
     } catch (error: any) {
         return res.status(500).json(
             ApiResponse.internalError('Errore nell\'eliminazione dell\'attività', error.message)
+        );
+    }
+};
+
+export const getAllByUserIdAsync = async (req: Request, res: Response) => {
+    try {
+        // Endpoint per ottenere TUTTE le attività senza paginazione (usa con cautela)
+        const userId = (req as any).user?.id;
+        
+        if (!userId) {
+            return res.status(401).json(
+                ApiResponse.unauthorized('Utente non autenticato')
+            );
+        }
+
+        const activities = await Activity.findByUserWithFullDetails(userId);
+
+        return res.status(200).json(
+            ApiResponse.success('Tutte le attività trovate', activities)
+        );
+    } catch (error: any) {
+        return res.status(500).json(
+            ApiResponse.internalError('Errore nel recupero di tutte le attività', error.message)
+        );
+    }
+};
+
+export const getUserStatsAsync = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user?.id;
+        
+        if (!userId) {
+            return res.status(401).json(
+                ApiResponse.unauthorized('Utente non autenticato')
+            );
+        }
+
+        const stats = await Activity.getUserStats(userId);
+
+        return res.status(200).json(
+            ApiResponse.success('Statistiche utente calcolate', stats)
+        );
+    } catch (error: any) {
+        return res.status(500).json(
+            ApiResponse.internalError('Errore nel calcolo delle statistiche', error.message)
         );
     }
 };
