@@ -126,12 +126,3 @@ export const logout = async (req: Request, res: Response) => {
     );
   }
 };
-
-export const test = (req: Request, res: Response) => {
-  return res.status(200).json(
-    ApiResponse.success('Test endpoint raggiunto con successo', {
-      message: "API funzionante",
-      timestamp: new Date().toISOString()
-    })
-  );
-};
