@@ -80,21 +80,24 @@ export const getByUserIdAsync = async (req: Request, res: Response) => {
         const hasPrevPage = page > 1;
 
         const pagination = {
-            currentPage: page,
-            totalPages,
-            totalItems: totalCount,
-            itemsPerPage: limit,
-            hasNextPage,
-            hasPrevPage,
-            nextPage: hasNextPage ? page + 1 : null,
-            prevPage: hasPrevPage ? page - 1 : null
+            page: page,
+            limit,
+            total: totalCount,
+            totalPages
         };
+        // const pagination = {
+        //     currentPage: page,
+        //     totalPages,
+        //     totalItems: totalCount,
+        //     itemsPerPage: limit,
+        //     hasNextPage,
+        //     hasPrevPage,
+        //     nextPage: hasNextPage ? page + 1 : null,
+        //     prevPage: hasPrevPage ? page - 1 : null
+        // };
 
         return res.status(200).json(
-            ApiResponse.success('Attività trovate', {
-                activities,
-                pagination
-            })
+            ApiResponse.success('Attività trovate', activities, pagination)
         );
     } catch (error: any) {
         return res.status(500).json(

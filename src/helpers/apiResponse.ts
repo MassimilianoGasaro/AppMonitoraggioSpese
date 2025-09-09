@@ -29,12 +29,14 @@ export class ApiResponse<T = any> {
     success: boolean = true,
     message: string = '',
     data?: T,
+    pagination?: ApiResponseData['pagination'],
     error?: string
   ) {
     this.success = success;
     this.message = message;
     this.data = data;
     this.error = error;
+    this.pagination = pagination;
     this.meta = {
       timestamp: new Date().toISOString(),
       version: '1.0.0'
@@ -44,15 +46,15 @@ export class ApiResponse<T = any> {
   /**
    * Crea una response di successo
    */
-  static success<T>(message: string, data?: T): ApiResponse<T> {
-    return new ApiResponse<T>(true, message, data);
+  static success<T>(message: string, data?: T, pagination?: ApiResponseData['pagination']): ApiResponse<T> {
+    return new ApiResponse<T>(true, message, data, pagination);
   }
 
   /**
    * Crea una response di errore
    */
   static error(message: string, error?: string): ApiResponse<null> {
-    return new ApiResponse<null>(false, message, undefined, error);
+    return new ApiResponse<null>(false, message, undefined, undefined, error);
   }
 
   /**
@@ -107,7 +109,7 @@ export class ApiResponse<T = any> {
    * Crea una response di validazione fallita
    */
   static validationError(message: string = 'Errore di validazione', error?: string): ApiResponse<null> {
-    return new ApiResponse<null>(false, message, undefined, error);
+    return new ApiResponse<null>(false, message, undefined, undefined, error);
   }
 
   /**
@@ -128,7 +130,7 @@ export class ApiResponse<T = any> {
    * Crea una response di errore interno del server
    */
   static internalError(message: string = 'Errore interno del server', error?: string): ApiResponse<null> {
-    return new ApiResponse<null>(false, message, undefined, error);
+    return new ApiResponse<null>(false, message, undefined, undefined, error);
   }
 
   /**
