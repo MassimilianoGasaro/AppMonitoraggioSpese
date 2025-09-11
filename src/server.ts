@@ -8,6 +8,8 @@ import logger from "./logger/logger";
 import authRoutes from "./routes/authRoutes";
 import activitiesRoutes from "./routes/activitiesRoutes";
 import config from "./config/environment";
+import typologiesRoutes from "./routes/typologiesRoutes";
+import { seedExpenseTypes } from "./helpers/typologiesSeeding";
 
 const app = express();
 
@@ -41,7 +43,8 @@ app.use('/api', apiRouter);
 
 // Aggiungi tutte le rotte al router principale
 apiRouter.use('/auth', authRoutes);
-apiRouter.use('/activities', activitiesRoutes); // Cambiato da /dashboard a /activities 
+apiRouter.use('/activities', activitiesRoutes);  
+apiRouter.use('/expense-types', typologiesRoutes);
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
@@ -69,12 +72,19 @@ if (!config.connectionString) {
 }
 
 mongoose.connect(config.connectionString)
-  .then(() => {
+  .then(async () => {
     logger.info("Connessione MongoDB stabilita!");
+
+    // Seed dei dati iniziali
+    if (config.isDevelopment) {
+        await seedExpenseTypes();
+    }
+
     server.listen(config.port, () => {
       logger.info(`🚀 Server in esecuzione su porta ${config.port}`);
       logger.info(`🌍 Ambiente: ${config.nodeEnv}`);
       logger.info(`🔐 Autenticazione: JWT`);
+      logger.info(`🔐 Frontend CORS: ${config.frontendUrl}`);
       logger.info(`📡 URL: ${config.isProduction ? 'https://your-app.onrender.com' : `http://localhost:${config.port}`}`);
     });
   })

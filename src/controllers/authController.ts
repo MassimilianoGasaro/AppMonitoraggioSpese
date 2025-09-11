@@ -113,7 +113,7 @@ export const logout = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
     
     if (userId) {
-      // Rimuovi il token dal database (opzionale per blacklist)
+      // Rimuovi il token dal database
       await User.findByIdAndUpdate(userId, { $unset: { _sessionToken: 1 } });
     }
 
@@ -125,13 +125,4 @@ export const logout = async (req: Request, res: Response) => {
       ApiResponse.internalError('Errore durante il logout', error.message)
     );
   }
-};
-
-export const test = (req: Request, res: Response) => {
-  return res.status(200).json(
-    ApiResponse.success('Test endpoint raggiunto con successo', {
-      message: "API funzionante",
-      timestamp: new Date().toISOString()
-    })
-  );
 };

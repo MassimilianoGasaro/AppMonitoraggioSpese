@@ -1,6 +1,8 @@
 import express from 'express';
 import { 
-  getByUserIdAsync, 
+  getByUserIdAsync,
+  getAllByUserIdAsync,
+  getUserStatsAsync,
   createAsync, 
   updateAsync, 
   deleteAsync, 
@@ -13,9 +15,15 @@ const router = express.Router();
 // Tutte le routes delle attività richiedono autenticazione JWT
 // Il client deve inviare: Authorization: Bearer <jwt-token>
 
-// GET /api/activities/user - Ottieni le attività dell'utente autenticato
-// Query params: ?page=1&limit=10&type=expense&startDate=2025-01-01&endDate=2025-12-31
+// GET /api/activities/user - Ottieni le attività dell'utente autenticato con paginazione
+// Query params: ?page=1&limit=10&type=expense&startDate=2025-01-01&endDate=2025-12-31&search=alimentari
 router.get('/user', authenticateAndOwn, getByUserIdAsync);
+
+// GET /api/activities/user/all - Ottieni TUTTE le attività dell'utente (senza paginazione)
+router.get('/user/all', authenticateAndOwn, getAllByUserIdAsync);
+
+// GET /api/activities/user/stats - Ottieni statistiche dell'utente
+router.get('/user/stats', authenticateAndOwn, getUserStatsAsync);
 
 // GET /api/activities/:id - Ottieni attività per ID (URI parameter)
 router.get('/:id', authenticateAndOwn, getByIdAsync);
