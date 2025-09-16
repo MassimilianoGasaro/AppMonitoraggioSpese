@@ -9,6 +9,8 @@ interface UserDocument extends Document {
   email: string;
   dateOfSubscribe?: string;
   _sessionToken?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 }
 
 export const UserSchema = new Schema<UserDocument>({
@@ -17,8 +19,10 @@ export const UserSchema = new Schema<UserDocument>({
   password: { type: String, require: true },
   email: { type: String, require: true },
   dateOfSubscribe: { type: String, require: false },
-  _sessionToken: { type: String, require: false }
-});
+  _sessionToken: { type: String, require: false },
+  resetPasswordToken: { type: String, required: false },
+  resetPasswordExpires: { type: Date, required: false }
+}, { timestamps: true });
 
 // Middleware per hashare la password prima di salvarla nel database
 UserSchema.pre<UserDocument>('save', function (next) {

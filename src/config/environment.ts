@@ -41,7 +41,13 @@ export const config = {
   // CORS
   corsOrigins: NODE_ENV === 'production' 
     ? [process.env.FRONTEND_URL || 'https://massimilianogasaro.github.io']
-    : ['http://localhost:3000', 'http://localhost:3001']
+    : ['http://localhost:3000', 'http://localhost:3001'],
+  
+  // MAIL
+  emailHost: process.env.EMAIL_HOST,
+  emailPort: process.env.EMAIL_PORT,
+  emailUser: process.env.EMAIL_USER,
+  emailPassword: process.env.EMAIL_PASSWORD
 };
 
 // Validazione delle variabili obbligatorie
