@@ -141,7 +141,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            // ⚠️ Per sicurezza, non rivelare se l'email esiste o no
+            // Per sicurezza, non rivelare se l'email esiste o no
             return res.status(200).json(
                 ApiResponse.success('Se l\'email esiste, riceverai le istruzioni per il reset')
             );
@@ -157,7 +157,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
         await user.save();
 
         // URL di reset (frontend)
-        const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetURL = `${process.env.FRONTEND_URL}/reset-pwd.html?token=${resetToken}`;
         
         // Template email
         const emailHTML = `

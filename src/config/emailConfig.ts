@@ -1,30 +1,64 @@
 // src/config/emailConfig.ts
 import nodemailer from 'nodemailer';
 import config from './environment';
+import logger from '../logger/logger';
 
-export const emailTransporter = nodemailer.createTransport({
-    host: config.emailHost || 'smtp.gmail.com',
-    port: parseInt(config.emailPort || '587'),
-    secure: false, // true per 465, false per altri
-    auth: {
-        user: config.emailUser, // Il tuo email
-        pass: config.emailPassword, // Password dell'app o password email
-    },
+// Configurazione diversa per sviluppo e produzione
+const createTransporter = () => {
+    if (config.isDevelopment) {
+        // DEVELOPMENT: Usa Mailtrap
+        return nodemailer.createTransport({
+            host: 'sandbox.smtp.mailtrap.io',
+            port: 2525,
+            auth: {
+                user: config.emailUser, // Mailtrap username
+                pass: config.emailPassword, // Mailtrap password
+            },
+        });
+    } else {
+        // PRODUCTION: Usa Brevo
+        return nodemailer.createTransport({
+            host: 'smtp-relay.brevo.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: config.emailUser, // Brevo email
+                pass: config.emailPassword, // Brevo SMTP key
+            },
+        });
+    }
+};
+
+export const emailTransporter = createTransporter();
+
+// Verifica configurazione al startup
+emailTransporter.verify((error, success) => {
+    if (error) {
+        logger.error('Configurazione email NON valida:', error);
+    } else {
+        logger.info(`Email configurata per ${config.isDevelopment ? 'DEVELOPMENT (Mailtrap)' : 'PRODUCTION (Brevo)'}`);
+    }
 });
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
     try {
         const info = await emailTransporter.sendMail({
-            from: `"MoneyManager App" <${config.emailUser}>`,
+            from: '"MoneyManager App" <noreply@moneymanager.app>',
             to,
             subject,
             html,
         });
         
-        console.log('Email inviata:', info.messageId);
+        if (config.isDevelopment) {
+            logger.info(`Email inviata (TEST): ${info.messageId}`);
+            logger.info(`Preview Mailtrap: https://mailtrap.io/inboxes`);
+        } else {
+            logger.info(`Email inviata (PROD): ${info.messageId}`);
+        }
+        
         return true;
     } catch (error) {
-        console.error('Errore invio email:', error);
+        logger.error('Errore invio email:', error);
         return false;
     }
 };
